@@ -1,13 +1,10 @@
-# Микросервис для скачивания файлов
+# Microservice for downloading archived files
 
-Микросервис помогает работе основного сайта, сделанного на CMS и обслуживает
-запросы на скачивание архивов с файлами. Микросервис не умеет ничего, кроме упаковки файлов
-в архив. Закачиваются файлы на сервер через FTP или админку CMS.
+The microservice assists the main CMS website and handles requests for downloading archives with files. Microservice can do nothing but pack files into an archive. The files are uploaded to the server via FTP or the CMS admin panel.
 
-Создание архива происходит на лету по запросу от пользователя. Архив не сохраняется на диске, вместо этого по мере упаковки он сразу отправляется пользователю на скачивание.
+The archive is created "on the fly" on request from the user. The archive is not saved to disk, instead, it is immediately sent to the user for download as it is packed.
 
-От неавторизованного доступа архив защищен хешом в адресе ссылки на скачивание, например: `http://host.ru/archive/3bea29ccabbbf64bdebcc055319c5745/`. Хеш задается названием каталога с файлами, выглядит структура каталога так:
-
+The archive is protected from unauthorized access by a hash in the download link address, e.g.: `http://host.ru/archive/3bea29ccabbbf64bdebcc055319c5745/`. The hash is set by the name of the directory with the files, the directory structure looks like this
 ```
 - photos
     - 3bea29ccabbbf64bdebcc055319c5745
@@ -20,35 +17,31 @@
 ```
 
 
-## Как установить
+## Getting started with Docker
 
-Для работы микросервиса нужен Python версии не ниже 3.6.
-
-```bash
-pip install -r requirements.txt
-```
-
-## Как запустить
+If you don't already have Docker installed, [get it here](https://www.docker.com/get-started).
 
 ```bash
-python server.py
+docker-compose run --rm archiver
 ```
 
-Сервер запустится на порту 8080, чтобы проверить его работу перейдите в браузере на страницу [http://127.0.0.1:8080/](http://127.0.0.1:8080/).
-
-## Как развернуть на сервере
+## To start the server independently, run:
 
 ```bash
-python server.py
+docker-compose up archiver
 ```
 
-После этого перенаправить на микросервис запросы, начинающиеся с `/archive/`. Например:
+### Not mandatory environment variables
+
+- SHOW_LOGS - should be logs displayed in standard stdout and stderr or not.
+- PHOTOS_DIR - the absolute path of the photos folder.
+- PAUSE_TIME - the delay time between sending chunks of the file.
+
+
+You can test to see if the server is running correctly by visiting http://localhost:8080/ in your favorite browser.
+Send requests to the path `/archive/` to download archived files:
 
 ```
 GET http://host.ru/archive/3bea29ccabbbf64bdebcc055319c5745/
 GET http://host.ru/archive/af1ad8c76fda2e48ea9aed2937e972ea/
 ```
-
-# Цели проекта
-
-Код написан в учебных целях — это урок в курсе по Python и веб-разработке на сайте [Devman](https://dvmn.org).
