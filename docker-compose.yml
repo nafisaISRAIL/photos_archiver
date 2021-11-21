@@ -4,7 +4,7 @@ services:
     build: .
     volumes:
       - .:/src
-      - ${PHOTOS_DIR}:/photos
+      - ${PHOTOS_DIR}:/src/photos
     working_dir: /src
     command: python server.py
     ports:

@@ -1,6 +1,7 @@
 import asyncio
 import logging
 import os
+import sys
 
 from aiohttp import web
 import aiofiles
@@ -17,32 +18,38 @@ if SHOW_LOGS:
 async def archivate(request):
     archive_hash = request.match_info['archive_hash']
 
-    photos_dir = f"/photos/{archive_hash}"
+    photos_dir = f'photos/{archive_hash}'
+
     if not os.path.exists(photos_dir):
         raise web.HTTPFound('/404/')
 
-    zip_command = f'zip -rj - {photos_dir}'
-    headers = {"CONTENT-DISPOSITION": f'attachment; filename="{archive_hash}.zip'}
+    headers = {
+        'Content-Type': 'application/zip',
+        'Content-Disposition': f'attachment; filename="{archive_hash}".zip',
+    }
 
     response = web.StreamResponse(headers=headers)
     await response.prepare(request)
 
-    process = await asyncio.create_subprocess_shell(
-        zip_command,
-        stdout=asyncio.subprocess.PIPE,
-        stderr=asyncio.subprocess.PIPE)
+    zip_command = ['zip', '-r', '-', photos_dir]
 
+    process = await asyncio.create_subprocess_exec(
+        sys.executable,
+        *zip_command,
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE,
+    )
     try:
         while True:
             data = await process.stdout.read(CHUNK_SIZE)
             if not data:
-                logging.info("Complited to send the file.")
+                logging.info('Complited to send the file.')
                 break
-            logging.info(f"Sending archive chunk {len(data)}")
+            logging.info(f'Sending archive chunk {len(data)} ...')
             await response.write(data)
             await asyncio.sleep(PAUSE_TIME)
     except asyncio.CancelledError:
-        logging.error("Download was interrupted")
+        logging.error('Download was interrupted.')
         logging.info(f'Killing the zip subprocess.')
         process.kill()
     finally:
